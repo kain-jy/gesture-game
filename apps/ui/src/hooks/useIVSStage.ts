@@ -1,22 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Stage,
-  StageEvents,
-  SubscribeType,
-  StreamType,
-  StageConnectionState,
-  StageParticipantInfo,
-  StageStream,
-  StageStrategy,
-  LocalStageStream,
-} from "amazon-ivs-web-broadcast";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface UseIVSStageParams {
   participantToken: string;
   onError?: (error: string) => void;
-  onConnectionStateChange?: (state: StageConnectionState) => void;
+  onConnectionStateChange?: (state: unknown) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useIVSStage = ({
   participantToken,
   onError,
@@ -25,11 +15,17 @@ export const useIVSStage = ({
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string>("");
-  const stageRef = useRef<Stage | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stageRef = useRef<any | null>(null);
   const videoElementsRef = useRef<Map<string, HTMLVideoElement>>(new Map());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const streamTypeRef = useRef<any>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createVideoElement = (
-    participant: StageParticipantInfo,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    participant: any,
     mediaStream: MediaStream
   ): HTMLVideoElement => {
     const videoElement = document.createElement("video");
@@ -42,9 +38,12 @@ export const useIVSStage = ({
     return videoElement;
   };
 
-  const handleStreamsAdded = (
-    participant: StageParticipantInfo,
-    streams: StageStream[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleStreamsAdded = useCallback((
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    participant: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    streams: any[]
   ) => {
     console.log("Streams added:", participant.id, streams);
 
@@ -53,13 +52,16 @@ export const useIVSStage = ({
 
     streams.forEach((stream) => {
       if (stream.mediaStreamTrack) {
-        if (stream.streamType === StreamType.VIDEO) {
+        // StreamTypeの値を正しく比較（動的インポート後の値を使用）
+        if (stream.streamType === streamTypeRef.current?.VIDEO) {
           videoTracks.push(stream.mediaStreamTrack);
-        } else if (stream.streamType === StreamType.AUDIO) {
+        } else if (stream.streamType === streamTypeRef.current?.AUDIO) {
           audioTracks.push(stream.mediaStreamTrack);
         }
       }
     });
+
+    console.log("Video tracks:", videoTracks.length, "Audio tracks:", audioTracks.length);
 
     if (videoTracks.length > 0 && videoContainerRef.current) {
       const allTracks = [...videoTracks, ...audioTracks];
@@ -78,10 +80,12 @@ export const useIVSStage = ({
       }
 
       videoContainerRef.current.appendChild(videoElement);
+      console.log("Video element added to container");
     }
-  };
+  }, []);
 
-  const handleParticipantLeft = (participant: StageParticipantInfo) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleParticipantLeft = useCallback((participant: any) => {
     console.log("Participant left:", participant.id);
 
     const videoElement = videoElementsRef.current.get(participant.id);
@@ -89,34 +93,58 @@ export const useIVSStage = ({
       videoElement.remove();
       videoElementsRef.current.delete(participant.id);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!participantToken || !videoContainerRef.current) return;
+    if (!participantToken || !videoContainerRef.current || typeof window === 'undefined') {
+      console.log("Early return:", { participantToken: !!participantToken, videoContainer: !!videoContainerRef.current, window: typeof window });
+      return;
+    }
+
+    console.log("Starting stage connection with token:", participantToken);
 
     const connectToStage = async () => {
       try {
-        const strategy: StageStrategy = {
-          shouldPublishParticipant: (_participant: StageParticipantInfo) => {
+        setIsLoading(true);
+        setError("");
+        
+        const {
+          Stage,
+          StageEvents,
+          SubscribeType,
+          StreamType,
+          StageConnectionState,
+        } = await import("amazon-ivs-web-broadcast");
+
+        // StreamTypeの参照を保存
+        streamTypeRef.current = StreamType;
+
+        console.log("IVS Web Broadcast imported successfully", { StreamType });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const strategy: any = {
+          shouldPublishParticipant: () => {
             return false;
           },
-          shouldSubscribeToParticipant: (_participant: StageParticipantInfo) => {
+          shouldSubscribeToParticipant: () => {
             return SubscribeType.AUDIO_VIDEO;
           },
           stageStreamsToPublish: () => {
-            return [] as LocalStageStream[];
+            return [];
           },
         };
 
         const stage = new Stage(participantToken, strategy);
+        console.log("Stage instance created");
 
         stage.on(
           StageEvents.STAGE_CONNECTION_STATE_CHANGED,
-          (state: StageConnectionState) => {
+          (state: unknown) => {
             const connected = state === StageConnectionState.CONNECTED;
             setIsConnected(connected);
+            setIsLoading(false);
             onConnectionStateChange?.(state);
-            console.log("Stage connection state:", state);
+            console.log("Stage connection state:", state, "Connected:", connected);
           }
         );
 
@@ -131,16 +159,20 @@ export const useIVSStage = ({
           console.error("Stage error:", err);
           const errorMessage = err.message || "Stage connection error";
           setError(errorMessage);
+          setIsLoading(false);
           onError?.(errorMessage);
         });
 
+        console.log("Joining stage...");
         await stage.join();
         stageRef.current = stage;
+        console.log("Stage joined successfully");
       } catch (err) {
         console.error("Failed to connect to stage:", err);
         const errorMessage =
           err instanceof Error ? err.message : "Failed to connect to stage";
         setError(errorMessage);
+        setIsLoading(false);
         onError?.(errorMessage);
       }
     };
@@ -153,16 +185,18 @@ export const useIVSStage = ({
         stageRef.current = null;
       }
 
-      videoElementsRef.current.forEach((videoElement) => {
+      const currentVideoElements = videoElementsRef.current;
+      currentVideoElements.forEach((videoElement) => {
         videoElement.remove();
       });
-      videoElementsRef.current.clear();
+      currentVideoElements.clear();
     };
-  }, [participantToken, onError, onConnectionStateChange]);
+  }, [participantToken, onError, onConnectionStateChange, handleStreamsAdded, handleParticipantLeft]);
 
   return {
     videoContainerRef,
     isConnected,
     error,
+    isLoading,
   };
 };
