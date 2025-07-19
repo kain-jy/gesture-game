@@ -1,41 +1,36 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAtom } from "jotai";
+import { Subscription } from "rxjs";
+import { generateRandomString } from "@/utils/random";
+import { ChatService } from "@/services/chatService";
 import {
-  ChatRoom,
-  ChatMessage,
-  ConnectionState,
-  DeleteMessageEvent,
-  SendMessageRequest,
-} from "amazon-ivs-chat-messaging";
+  messagesAtom,
+  connectionStateAtom,
+  errorAtom,
+  usernameAtom,
+  chatTokenAtom,
+  isLoadingTokenAtom,
+} from "@/atoms/chatAtoms";
 
-interface IVSChatRoomProps {
-  chatRoomArn: string;
-  apiEndpoint?: string;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  sender: {
-    userId: string;
-    attributes?: Record<string, string>;
-  };
-  sendTime: Date;
-}
-
-export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function IVSChatRoom() {
+  const [messages, setMessages] = useAtom(messagesAtom);
+  const [connectionState, setConnectionState] = useAtom(connectionStateAtom);
+  const [error, setError] = useAtom(errorAtom);
+  const [chatToken, setChatToken] = useAtom(chatTokenAtom);
+  const [username, setUsername] = useAtom(usernameAtom);
+  const [isLoadingToken, setIsLoadingToken] = useAtom(isLoadingTokenAtom);
   const [messageInput, setMessageInput] = useState("");
-  const [connectionState, setConnectionState] =
-    useState<ConnectionState>("disconnected");
-  const [error, setError] = useState<string>("");
-  const [chatToken, setChatToken] = useState("");
-  const [userId, setUserId] = useState("");
-  const [username, setUsername] = useState("");
-  const [isLoadingToken, setIsLoadingToken] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatRoom = useRef<ChatRoom | null>(null);
+  const chatServiceRef = useRef<ChatService | null>(null);
+  const subscriptionRef = useRef<Subscription | null>(null);
+
+  const userId = generateRandomString(10);
+
+  const generateChatTokenApiEndpoint =
+    process.env.NEXT_PUBLIC_CHAT_TOKEN_API_ENDPOINT || "";
+  const chatRoomArn = process.env.NEXT_PUBLIC_IVS_CHAT_ROOM_ARN || "";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,12 +40,8 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
     scrollToBottom();
   }, [messages]);
 
-  const fetchToken = async () => {
-    if (!apiEndpoint) {
-      throw new Error("API endpoint is not configured");
-    }
-
-    const response = await fetch(apiEndpoint, {
+  const fetchToken = useCallback(async () => {
+    const response = await fetch(generateChatTokenApiEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -73,9 +64,9 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
       sessionExpirationTime: new Date(data.sessionExpirationTime),
       tokenExpirationTime: new Date(data.tokenExpirationTime),
     };
-  };
+  }, [generateChatTokenApiEndpoint, chatRoomArn, userId, username]);
 
-  const tokenProvider = async () => {
+  const tokenProvider = useCallback(async () => {
     if (chatToken) {
       return {
         token: chatToken,
@@ -84,125 +75,104 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
       };
     }
     return fetchToken();
-  };
+  }, [chatToken, fetchToken]);
 
-  const connectToChat = async () => {
-    if (!apiEndpoint && !chatToken.trim()) {
-      setError("チャットトークンを入力するか、APIエンドポイントを設定してください");
-      return;
-    }
-
-    if (!userId.trim()) {
-      setError("ユーザーIDを入力してください");
-      return;
-    }
-
+  const connectToChat = useCallback(async () => {
     try {
       setIsLoadingToken(true);
       setError("");
 
       const region = chatRoomArn.split(":")[3];
 
-      chatRoom.current = new ChatRoom({
-        regionOrUrl: region,
-        tokenProvider: tokenProvider,
+      chatServiceRef.current = new ChatService(region, tokenProvider);
+
+      subscriptionRef.current = chatServiceRef.current.connect().subscribe({
+        next: (event) => {
+          switch (event.type) {
+            case "state":
+              setConnectionState(event.payload);
+              break;
+            case "message":
+              setMessages((prev) => [...prev, event.payload]);
+              break;
+            case "messageDelete":
+              setMessages((prev) =>
+                prev.filter((msg) => msg.id !== event.payload)
+              );
+              break;
+            case "error":
+              setError(event.payload);
+              break;
+          }
+        },
+        error: (err) => {
+          setError(err.message || "接続エラーが発生しました");
+          setConnectionState("disconnected");
+        },
       });
-
-      chatRoom.current.addListener("connecting", () => {
-        setConnectionState("connecting");
-      });
-
-      chatRoom.current.addListener("connect", () => {
-        setConnectionState("connected");
-      });
-
-      chatRoom.current.addListener("disconnect", () => {
-        setConnectionState("disconnected");
-      });
-
-      chatRoom.current.addListener("message", (message: ChatMessage) => {
-        const newMessage: Message = {
-          id: message.id,
-          content: message.content || "",
-          sender: message.sender,
-          sendTime: message.sendTime,
-        };
-        setMessages((prev) => [...prev, newMessage]);
-      });
-
-      chatRoom.current.addListener(
-        "messageDelete",
-        (event: DeleteMessageEvent) => {
-          setMessages((prev) =>
-            prev.filter((msg) => msg.id !== event.messageId)
-          );
-        }
-      );
-
-      chatRoom.current.connect();
     } catch (err) {
       setError(err instanceof Error ? err.message : "接続エラーが発生しました");
       setConnectionState("disconnected");
     } finally {
       setIsLoadingToken(false);
     }
-  };
+  }, [
+    chatRoomArn,
+    tokenProvider,
+    setConnectionState,
+    setError,
+    setIsLoadingToken,
+    setMessages,
+  ]);
 
-  const disconnectFromChat = () => {
-    if (chatRoom.current) {
-      chatRoom.current.disconnect();
-      chatRoom.current = null;
+  const disconnectFromChat = useCallback(() => {
+    if (subscriptionRef.current) {
+      subscriptionRef.current.unsubscribe();
+      subscriptionRef.current = null;
+    }
+    if (chatServiceRef.current) {
+      chatServiceRef.current.disconnect();
+      chatServiceRef.current = null;
     }
     setMessages([]);
     setConnectionState("disconnected");
-  };
+  }, [setMessages, setConnectionState]);
 
-  const sendMessage = async () => {
+  const sendMessage = useCallback(async () => {
     if (
       !messageInput.trim() ||
-      !chatRoom.current ||
+      !chatServiceRef.current ||
       connectionState !== "connected"
     ) {
       return;
     }
 
     try {
-      const request = new SendMessageRequest(messageInput.trim());
-      await chatRoom.current.sendMessage(request);
+      await chatServiceRef.current.sendMessage(messageInput.trim());
       setMessageInput("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "メッセージ送信エラー");
     }
-  };
+  }, [messageInput, connectionState, setError]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       sendMessage();
     }
   };
 
+  useEffect(() => {
+    return () => {
+      disconnectFromChat();
+    };
+  }, [disconnectFromChat]);
+
   return (
-    <div className="bg-white rounded-lg shadow-md h-96 flex flex-col">
+    <div className="bg-white w-full h-96 rounded-lg flex flex-col">
       {connectionState === "disconnected" && (
         <div className="p-4 border-b">
           <div className="space-y-3">
-            <div>
-              <label
-                htmlFor="userId"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                ユーザーID *
-              </label>
-              <input
-                type="text"
-                id="userId"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="例: user123"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
             <div>
               <label
                 htmlFor="username"
@@ -219,7 +189,7 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            {!apiEndpoint && (
+            {!generateChatTokenApiEndpoint && (
               <div>
                 <label
                   htmlFor="chatToken"
@@ -263,15 +233,15 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
                 {connectionState === "connected" ? "接続済み" : "接続中..."}
               </span>
             </div>
-            <button
+            {/* <button
               onClick={disconnectFromChat}
               className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
             >
               切断
-            </button>
+            </button> */}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto h-full p-4 space-y-3">
             {messages.map((message) => (
               <div key={message.id} className="bg-gray-100 rounded-lg p-3">
                 <div className="flex justify-between items-start mb-1">
