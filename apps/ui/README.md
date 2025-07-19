@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UI アプリケーション
 
-## Getting Started
+Amazon IVS統合機能を持つNext.jsアプリケーションです。
 
-First, run the development server:
+## セットアップ
 
+1. 依存関係をインストール:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. 開発サーバーを起動:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ビルドプロセス
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ビルドプロセスでは、npmパッケージから必要なAmazon IVS WASMファイルが自動的にコピーされます:
 
-## Learn More
+- `amazon-ivs-wasmworker.min.wasm` (1.2MB)
+- `amazon-ivs-wasmworker.min.js` (110KB)
 
-To learn more about Next.js, take a look at the following resources:
+これらのファイルは、ビルドプロセス中に`node_modules/amazon-ivs-player/dist/assets/`からコピーされ、`public/`ディレクトリに配置されます。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 手動コピー
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+IVSファイルを手動でコピーする必要がある場合:
 
-## Deploy on Vercel
+```bash
+npm run copy-ivs
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### ビルド
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run build
+```
+
+`prebuild`スクリプトがビルド前に自動的に実行され、WASMファイルが利用可能であることを保証します。
+
+## ファイル管理
+
+- WASMファイルはGitにコミットされません（`.gitignore`で除外）
+- ファイルはビルド時に自動的に配置されます
+- バージョンは`amazon-ivs-player`パッケージのバージョンと同期されます
+
+## 開発
+
+- [http://localhost:3000](http://localhost:3000)を開いてアプリケーションを表示
+- 開発サーバーは、IVSファイルが存在しない場合に自動的に配置します
