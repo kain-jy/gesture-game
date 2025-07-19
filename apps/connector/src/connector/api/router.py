@@ -5,6 +5,7 @@ from turtle import mode
 import requests
 from connector.common.ai_models import ai_models
 from connector.common.setting import settings
+from connector.functions.ai_access import ai_access
 from connector.functions.redis_client import redis_client
 from connector.model.models import (
     ModelRequest,
@@ -23,19 +24,12 @@ def health_check():
 
 
 def generate_answer(item: SessionRequest) -> None:
-    print("call")
-
     result = {}
 
     for k, v in ai_models.items():
         model_request = ModelRequest(model=v, theme=item.theme, image="hello")
 
-        resp = requests.post(
-            f"{settings.AGENT_HOST}/invocations",
-            json=model_request.dict(),
-        )
-
-        result[k] = ModelResponse(**resp.json())
+        result[k] = ai_access.call_agent(model_request)
 
     redis_client.set_model_data(item.session_id, result)
     redis_client.set_session_status(item.session_id, True)
@@ -59,7 +53,7 @@ def get_score(
         return SessionResponse(
             status=True,
             message="success",
-            data=None,
+            data=redis_client.get_model_data(item.session_id),
         )
 
 

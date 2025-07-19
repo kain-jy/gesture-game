@@ -38,15 +38,14 @@ class RedisClient:
         if resp is None:
             return None
 
-        return {k: ModelResponse(**v) for k, v in resp.items()}
+        return {k: ModelResponse.model_validate_json(v) for k, v in resp.items()}
 
     def set_model_data(self, session_id: str, data: dict[str, ModelResponse]) -> None:
         """
         Set model data for a session in Redis.
         """
-        for k, v in data.items():
-            # Store each model response in a hash
-            self.client.hset(session_id, k, v.json())
+
+        self.client.hmset(session_id, {k: v.model_dump_json() for k, v in data.items()})
 
 
 redis_client = RedisClient()
