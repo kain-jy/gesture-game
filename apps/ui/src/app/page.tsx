@@ -11,6 +11,7 @@ export default function Home() {
     error,
     isStage,
     stageToken,
+    chatRoomArn,
     setStreamArn,
     handleSubmit,
   } = useIVSForm();
@@ -19,7 +20,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          AWS IVS Viewer
+          AWS IVS Stage Viewer
         </h1>
 
         <form onSubmit={handleSubmit} className="mb-8">
@@ -28,7 +29,7 @@ export default function Home() {
               type="text"
               value={streamArn}
               onChange={(e) => setStreamArn(e.target.value)}
-              placeholder="Enter IVS Channel/Stage ARN or Playback URL"
+              placeholder="Enter IVS Stage ARN or Playback URL"
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
@@ -43,6 +44,18 @@ export default function Home() {
         {error && (
           <div className="max-w-2xl mx-auto mb-4">
             <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* チャットルームARNの表示 */}
+        {chatRoomArn && (
+          <div className="max-w-2xl mx-auto mb-4 p-3 bg-green-50 rounded-lg">
+            <h3 className="text-sm font-semibold text-green-800 mb-1">
+              チャットルーム ARN:
+            </h3>
+            <p className="text-xs text-green-700 font-mono break-all">
+              {chatRoomArn}
+            </p>
           </div>
         )}
 

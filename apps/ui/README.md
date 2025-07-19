@@ -1,51 +1,59 @@
-# UI アプリケーション
+# AWS IVS Stage Viewer
 
-Amazon IVS統合機能を持つNext.jsアプリケーションです。
+AWS Interactive Video Service (IVS) Stage のストリームを視聴するためのWebアプリケーションです。
+
+## 機能
+
+- IVS Stage 対応
+- 環境変数によるデフォルト設定
+- チャットルーム ARN の表示
+- リアルタイムストリーミング視聴
 
 ## セットアップ
 
-1. 依存関係をインストール:
+### 1. 依存関係のインストール
+
 ```bash
 npm install
 ```
 
-2. 開発サーバーを起動:
+### 2. 環境変数の設定
+
+`env.example` ファイルをコピーして `.env.local` を作成し、実際の値を設定してください：
+
+```bash
+cp env.example .env.local
+```
+
+#### 必要な環境変数
+
+- `NEXT_PUBLIC_IVS_STAGE_ARN`: IVS Stage ARN（インタラクティブストリーミング用）
+- `NEXT_PUBLIC_IVS_PARTICIPANT_TOKEN`: Stage参加者トークン（必須）
+- `NEXT_PUBLIC_IVS_CHAT_ROOM_ARN`: チャットルーム ARN（チャット機能用）
+
+### 3. 開発サーバーの起動
+
 ```bash
 npm run dev
 ```
 
-## ビルドプロセス
+アプリケーションは [http://localhost:3000](http://localhost:3000) で起動します。
 
-ビルドプロセスでは、npmパッケージから必要なAmazon IVS WASMファイルが自動的にコピーされます:
+## 使用方法
 
-- `amazon-ivs-wasmworker.min.wasm` (1.2MB)
-- `amazon-ivs-wasmworker.min.js` (110KB)
+1. 環境変数で設定した Stage ARN が自動的に入力フィールドに表示されます
+2. 必要に応じて ARN を変更できます
+3. "Watch" ボタンをクリックしてストリームを開始します
+4. チャットルーム ARN が設定されている場合、画面上に表示されます
 
-これらのファイルは、ビルドプロセス中に`node_modules/amazon-ivs-player/dist/assets/`からコピーされ、`public/`ディレクトリに配置されます。
+## 技術スタック
 
-### 手動コピー
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- AWS IVS Player SDK
 
-IVSファイルを手動でコピーする必要がある場合:
+## 注意事項
 
-```bash
-npm run copy-ivs
-```
-
-### ビルド
-
-```bash
-npm run build
-```
-
-`prebuild`スクリプトがビルド前に自動的に実行され、WASMファイルが利用可能であることを保証します。
-
-## ファイル管理
-
-- WASMファイルはGitにコミットされません（`.gitignore`で除外）
-- ファイルはビルド時に自動的に配置されます
-- バージョンは`amazon-ivs-player`パッケージのバージョンと同期されます
-
-## 開発
-
-- [http://localhost:3000](http://localhost:3000)を開いてアプリケーションを表示
-- 開発サーバーは、IVSファイルが存在しない場合に自動的に配置します
+- IVS Stage を使用する場合は、必ず `NEXT_PUBLIC_IVS_PARTICIPANT_TOKEN` を設定してください
+- 環境変数は `NEXT_PUBLIC_` プレフィックスが必要です（クライアントサイドで使用するため）
