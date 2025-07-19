@@ -1,9 +1,11 @@
 import time
 from random import randint
 
+from fastapi import APIRouter, BackgroundTasks
+
 from connector.common.ai_models import ai_models
-from connector.common.setting import settings
 from connector.functions.ai_access import ai_access
+from connector.functions.aws_s3 import get_latest_image
 from connector.functions.redis_client import redis_client
 from connector.model.models import (
     ModelRequest,
@@ -11,21 +13,17 @@ from connector.model.models import (
     SessionRequest,
     SessionResponse,
 )
-from fastapi import APIRouter, BackgroundTasks
 
 router = APIRouter()
-
-
-@router.get("/health")
-def health_check():
-    return {"status": "ok", "agent_host": settings.AGENT_HOST}
 
 
 def generate_answer(item: SessionRequest) -> None:
     result = {}
 
     for k, v in ai_models.items():
-        model_request = ModelRequest(model=v, theme=item.theme, image="hello")
+        model_request = ModelRequest(
+            model=v, theme=item.theme, image=get_latest_image()
+        )
 
         result[k] = ai_access.call_agent(model_request)
 

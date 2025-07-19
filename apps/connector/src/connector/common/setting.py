@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     GRANT_TYPE: str = "client_credentials"
     SCOPE: str = ""
 
+    S3_BUCKET: str = "gesture-game-bucket"
+
     model_config = SettingsConfigDict(env_file=".env")  # , env_prefix="DLMNG_")
 
 
