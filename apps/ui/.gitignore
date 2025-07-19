@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# WASM files (downloaded during build)
+*.wasm
+amazon-ivs-wasmworker.min.js
