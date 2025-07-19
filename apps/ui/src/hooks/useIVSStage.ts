@@ -95,108 +95,122 @@ export const useIVSStage = ({
     }
   }, []);
 
-  useEffect(() => {
+  const connect = useCallback(async () => {
     if (!participantToken || !videoContainerRef.current || typeof window === 'undefined') {
-      console.log("Early return:", { participantToken: !!participantToken, videoContainer: !!videoContainerRef.current, window: typeof window });
+      console.log("Cannot connect:", { participantToken: !!participantToken, videoContainer: !!videoContainerRef.current, window: typeof window });
+      return;
+    }
+
+    if (isConnected || isLoading) {
+      console.log("Already connected or connecting");
       return;
     }
 
     console.log("Starting stage connection with token:", participantToken);
 
-    const connectToStage = async () => {
-      try {
-        setIsLoading(true);
-        setError("");
-        
-        const {
-          Stage,
-          StageEvents,
-          SubscribeType,
-          StreamType,
-          StageConnectionState,
-        } = await import("amazon-ivs-web-broadcast");
+    try {
+      setIsLoading(true);
+      setError("");
+      
+      const {
+        Stage,
+        StageEvents,
+        SubscribeType,
+        StreamType,
+        StageConnectionState,
+      } = await import("amazon-ivs-web-broadcast");
 
-        // StreamTypeの参照を保存
-        streamTypeRef.current = StreamType;
+      // StreamTypeの参照を保存
+      streamTypeRef.current = StreamType;
 
-        console.log("IVS Web Broadcast imported successfully", { StreamType });
+      console.log("IVS Web Broadcast imported successfully", { StreamType });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const strategy: any = {
-          shouldPublishParticipant: () => {
-            return false;
-          },
-          shouldSubscribeToParticipant: () => {
-            return SubscribeType.AUDIO_VIDEO;
-          },
-          stageStreamsToPublish: () => {
-            return [];
-          },
-        };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const strategy: any = {
+        shouldPublishParticipant: () => {
+          return false;
+        },
+        shouldSubscribeToParticipant: () => {
+          return SubscribeType.AUDIO_VIDEO;
+        },
+        stageStreamsToPublish: () => {
+          return [];
+        },
+      };
 
-        const stage = new Stage(participantToken, strategy);
-        console.log("Stage instance created");
+      const stage = new Stage(participantToken, strategy);
+      console.log("Stage instance created");
 
-        stage.on(
-          StageEvents.STAGE_CONNECTION_STATE_CHANGED,
-          (state: unknown) => {
-            const connected = state === StageConnectionState.CONNECTED;
-            setIsConnected(connected);
-            setIsLoading(false);
-            onConnectionStateChange?.(state);
-            console.log("Stage connection state:", state, "Connected:", connected);
-          }
-        );
-
-        stage.on(
-          StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED,
-          handleStreamsAdded
-        );
-
-        stage.on(StageEvents.STAGE_PARTICIPANT_LEFT, handleParticipantLeft);
-
-        stage.on(StageEvents.ERROR, (err: Error) => {
-          console.error("Stage error:", err);
-          const errorMessage = err.message || "Stage connection error";
-          setError(errorMessage);
+      stage.on(
+        StageEvents.STAGE_CONNECTION_STATE_CHANGED,
+        (state: unknown) => {
+          const connected = state === StageConnectionState.CONNECTED;
+          setIsConnected(connected);
           setIsLoading(false);
-          onError?.(errorMessage);
-        });
+          onConnectionStateChange?.(state);
+          console.log("Stage connection state:", state, "Connected:", connected);
+        }
+      );
 
-        console.log("Joining stage...");
-        await stage.join();
-        stageRef.current = stage;
-        console.log("Stage joined successfully");
-      } catch (err) {
-        console.error("Failed to connect to stage:", err);
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to connect to stage";
+      stage.on(
+        StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED,
+        handleStreamsAdded
+      );
+
+      stage.on(StageEvents.STAGE_PARTICIPANT_LEFT, handleParticipantLeft);
+
+      stage.on(StageEvents.ERROR, (err: Error) => {
+        console.error("Stage error:", err);
+        const errorMessage = err.message || "Stage connection error";
         setError(errorMessage);
         setIsLoading(false);
         onError?.(errorMessage);
-      }
-    };
-
-    connectToStage();
-
-    return () => {
-      if (stageRef.current) {
-        stageRef.current.leave();
-        stageRef.current = null;
-      }
-
-      const currentVideoElements = videoElementsRef.current;
-      currentVideoElements.forEach((videoElement) => {
-        videoElement.remove();
       });
-      currentVideoElements.clear();
+
+      console.log("Joining stage...");
+      await stage.join();
+      stageRef.current = stage;
+      console.log("Stage joined successfully");
+    } catch (err) {
+      console.error("Failed to connect to stage:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to connect to stage";
+      setError(errorMessage);
+      setIsLoading(false);
+      onError?.(errorMessage);
+    }
+  }, [participantToken, isConnected, isLoading, onError, onConnectionStateChange, handleStreamsAdded, handleParticipantLeft]);
+
+  const disconnect = useCallback(() => {
+    if (stageRef.current) {
+      stageRef.current.leave();
+      stageRef.current = null;
+    }
+
+    const currentVideoElements = videoElementsRef.current;
+    currentVideoElements.forEach((videoElement) => {
+      videoElement.remove();
+    });
+    currentVideoElements.clear();
+
+    setIsConnected(false);
+    setIsLoading(false);
+    setError("");
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      disconnect();
     };
-  }, [participantToken, onError, onConnectionStateChange, handleStreamsAdded, handleParticipantLeft]);
+  }, [disconnect]);
 
   return {
     videoContainerRef,
     isConnected,
     error,
     isLoading,
+    connect,
+    disconnect,
   };
 };

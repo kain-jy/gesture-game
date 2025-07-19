@@ -8,11 +8,7 @@ import {
   DeleteMessageEvent,
   SendMessageRequest,
 } from "amazon-ivs-chat-messaging";
-
-interface IVSChatRoomProps {
-  chatRoomArn: string;
-  apiEndpoint?: string;
-}
+import { generateRandomString } from "@/utils/random";
 
 interface Message {
   id: string;
@@ -24,18 +20,23 @@ interface Message {
   sendTime: Date;
 }
 
-export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomProps) {
+export default function IVSChatRoom() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
   const [error, setError] = useState<string>("");
   const [chatToken, setChatToken] = useState("");
-  const [userId, setUserId] = useState("");
   const [username, setUsername] = useState("");
   const [isLoadingToken, setIsLoadingToken] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRoom = useRef<ChatRoom | null>(null);
+
+  const userId = generateRandomString(10);
+
+  const generateChatTokenApiEndpoint =
+    process.env.NEXT_PUBLIC_CHAT_TOKEN_API_ENDPOINT || "";
+  const chatRoomArn = process.env.NEXT_PUBLIC_IVS_CHAT_ROOM_ARN || "";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,11 +47,7 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
   }, [messages]);
 
   const fetchToken = async () => {
-    if (!apiEndpoint) {
-      throw new Error("API endpoint is not configured");
-    }
-
-    const response = await fetch(apiEndpoint, {
+    const response = await fetch(generateChatTokenApiEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -87,16 +84,6 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
   };
 
   const connectToChat = async () => {
-    if (!apiEndpoint && !chatToken.trim()) {
-      setError("チャットトークンを入力するか、APIエンドポイントを設定してください");
-      return;
-    }
-
-    if (!userId.trim()) {
-      setError("ユーザーIDを入力してください");
-      return;
-    }
-
     try {
       setIsLoadingToken(true);
       setError("");
@@ -183,26 +170,10 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md h-96 flex flex-col">
+    <div className="bg-white w-full h-96 rounded-lg flex flex-col">
       {connectionState === "disconnected" && (
         <div className="p-4 border-b">
           <div className="space-y-3">
-            <div>
-              <label
-                htmlFor="userId"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                ユーザーID *
-              </label>
-              <input
-                type="text"
-                id="userId"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="例: user123"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
             <div>
               <label
                 htmlFor="username"
@@ -219,7 +190,7 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            {!apiEndpoint && (
+            {!generateChatTokenApiEndpoint && (
               <div>
                 <label
                   htmlFor="chatToken"
@@ -271,7 +242,7 @@ export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomPro
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto h-full p-4 space-y-3">
             {messages.map((message) => (
               <div key={message.id} className="bg-gray-100 rounded-lg p-3">
                 <div className="flex justify-between items-start mb-1">
