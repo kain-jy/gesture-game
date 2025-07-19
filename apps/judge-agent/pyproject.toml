@@ -1,0 +1,13 @@
+[project]
+name = "judge-agent"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.11"
+dependencies = [
+    "boto3",
+    "strands-agents",
+    "strands-agents-tools",
+    "bedrock-agentcore",
+    "aws-opentelemetry-distro",
+]
+
