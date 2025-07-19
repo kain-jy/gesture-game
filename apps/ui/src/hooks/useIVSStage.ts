@@ -33,7 +33,7 @@ export const useIVSStage = ({
     videoElement.autoplay = true;
     videoElement.playsInline = true;
     videoElement.controls = true;
-    videoElement.className = "w-full h-auto bg-black rounded-lg shadow-lg";
+    videoElement.className = "w-full h-auto bg-black rounded-lg shadow-lg aspect-video";
     videoElement.id = `video-${participant.id}`;
     return videoElement;
   };

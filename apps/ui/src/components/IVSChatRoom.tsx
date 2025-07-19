@@ -169,14 +169,14 @@ export default function IVSChatRoom() {
   }, [disconnectFromChat]);
 
   return (
-    <div className="bg-white w-full h-96 rounded-lg flex flex-col">
+    <div className="bg-gradient-to-b from-[var(--color-m1-midnight)] to-[var(--color-m1-charcoal)] w-full h-96 rounded-xl flex flex-col border border-[var(--color-m1-gold)]/20 shadow-xl overflow-hidden">
       {connectionState === "disconnected" && (
-        <div className="p-4 border-b">
-          <div className="space-y-3">
+        <div className="p-6 border-b border-[var(--color-m1-gold)]/20 bg-[var(--color-m1-midnight-light)]">
+          <div className="space-y-4">
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-[var(--color-m1-silver)] mb-2 tracking-wide"
               >
                 表示名（オプション）
               </label>
@@ -186,14 +186,14 @@ export default function IVSChatRoom() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="例: 田中太郎"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-[var(--color-m1-charcoal)] border border-[var(--color-m1-gold)]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-m1-gold)] focus:border-transparent text-[var(--color-m1-silver)] placeholder-[var(--color-m1-silver-dark)] transition-all"
               />
             </div>
             {!generateChatTokenApiEndpoint && (
               <div>
                 <label
                   htmlFor="chatToken"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-[var(--color-m1-silver)] mb-2 tracking-wide"
                 >
                   チャットトークン（手動入力）
                 </label>
@@ -203,14 +203,14 @@ export default function IVSChatRoom() {
                   value={chatToken}
                   onChange={(e) => setChatToken(e.target.value)}
                   placeholder="チャットトークンを入力"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-[var(--color-m1-charcoal)] border border-[var(--color-m1-gold)]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-m1-gold)] focus:border-transparent text-[var(--color-m1-silver)] placeholder-[var(--color-m1-silver-dark)] transition-all"
                 />
               </div>
             )}
             <button
               onClick={connectToChat}
               disabled={!userId.trim() || isLoadingToken}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full px-6 py-3 bg-gradient-to-r from-[var(--color-m1-gold)] to-[var(--color-m1-champagne)] text-[var(--color-m1-midnight)] font-semibold rounded-lg hover:from-[var(--color-m1-gold-light)] hover:to-[var(--color-m1-gold)] disabled:from-[var(--color-m1-charcoal)] disabled:to-[var(--color-m1-charcoal-light)] disabled:text-[var(--color-m1-silver-dark)] disabled:cursor-not-allowed transition-all duration-300 shadow-lg transform hover:scale-105 disabled:hover:scale-100"
             >
               {isLoadingToken ? "接続中..." : "チャットに接続"}
             </button>
@@ -220,47 +220,41 @@ export default function IVSChatRoom() {
 
       {connectionState !== "disconnected" && (
         <>
-          <div className="p-3 border-b bg-gray-50 flex justify-between items-center">
-            <div className="flex items-center space-x-2">
+          <div className="p-4 border-b border-[var(--color-m1-gold)]/20 bg-[var(--color-m1-midnight-light)] flex justify-between items-center">
+            <div className="flex items-center space-x-3">
               <div
-                className={`w-3 h-3 rounded-full ${
+                className={`w-3 h-3 rounded-full shadow-lg ${
                   connectionState === "connected"
-                    ? "bg-green-500"
-                    : "bg-yellow-500"
+                    ? "bg-[var(--color-m1-gold)] shadow-[var(--color-m1-gold)]/50"
+                    : "bg-[var(--color-m1-champagne)] shadow-[var(--color-m1-champagne)]/50"
                 }`}
               />
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-[var(--color-m1-silver)] tracking-wide">
                 {connectionState === "connected" ? "接続済み" : "接続中..."}
               </span>
             </div>
-            {/* <button
-              onClick={disconnectFromChat}
-              className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-            >
-              切断
-            </button> */}
           </div>
 
-          <div className="flex-1 overflow-y-auto h-full p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto h-full p-4 space-y-3 scrollbar-thin scrollbar-thumb-[var(--color-m1-gold)]/30 scrollbar-track-transparent">
             {messages.map((message) => (
-              <div key={message.id} className="bg-gray-100 rounded-lg p-3">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-medium text-sm text-blue-600">
+              <div key={message.id} className="bg-gradient-to-r from-[var(--color-m1-charcoal)]/80 to-[var(--color-m1-midnight-light)]/80 rounded-lg p-4 border border-[var(--color-m1-gold)]/10 backdrop-blur-sm">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-semibold text-sm text-[var(--color-m1-gold)] tracking-wide">
                     {message.sender.attributes?.username ||
                       message.sender.userId}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-[var(--color-m1-silver-dark)]">
                     {message.sendTime.toLocaleTimeString()}
                   </span>
                 </div>
-                <p className="text-gray-800">{message.content}</p>
+                <p className="text-[var(--color-m1-silver)] leading-relaxed">{message.content}</p>
               </div>
             ))}
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-3 border-t">
-            <div className="flex space-x-2">
+          <div className="p-4 border-t border-[var(--color-m1-gold)]/20 bg-[var(--color-m1-midnight-light)]">
+            <div className="flex space-x-3">
               <input
                 type="text"
                 value={messageInput}
@@ -268,14 +262,14 @@ export default function IVSChatRoom() {
                 onKeyDown={handleKeyDown}
                 placeholder="メッセージを入力..."
                 disabled={connectionState !== "connected"}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                className="flex-1 px-4 py-3 bg-[var(--color-m1-charcoal)] border border-[var(--color-m1-gold)]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-m1-gold)] focus:border-transparent text-[var(--color-m1-silver)] placeholder-[var(--color-m1-silver-dark)] disabled:bg-[var(--color-m1-charcoal)]/50 disabled:text-[var(--color-m1-silver-dark)] transition-all"
               />
               <button
                 onClick={sendMessage}
                 disabled={
                   !messageInput.trim() || connectionState !== "connected"
                 }
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-3 bg-gradient-to-r from-[var(--color-m1-crimson)] to-[var(--color-m1-crimson-light)] text-white font-semibold rounded-lg hover:from-[var(--color-m1-crimson-dark)] hover:to-[var(--color-m1-crimson)] disabled:from-[var(--color-m1-charcoal)] disabled:to-[var(--color-m1-charcoal-light)] disabled:text-[var(--color-m1-silver-dark)] disabled:cursor-not-allowed transition-all duration-300 shadow-lg transform hover:scale-105 disabled:hover:scale-100"
               >
                 送信
               </button>
@@ -285,8 +279,8 @@ export default function IVSChatRoom() {
       )}
 
       {error && (
-        <div className="p-3 bg-red-50 border-t border-red-200">
-          <p className="text-red-600 text-sm">{error}</p>
+        <div className="p-4 bg-gradient-to-r from-[var(--color-m1-crimson-dark)]/20 to-[var(--color-m1-crimson)]/20 border-t border-[var(--color-m1-crimson)]/30">
+          <p className="text-[var(--color-m1-crimson-light)] text-sm font-medium">{error}</p>
         </div>
       )}
     </div>
