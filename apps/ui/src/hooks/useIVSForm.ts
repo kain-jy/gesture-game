@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { constructPlaybackUrl, isStageArn } from "@/utils/ivs";
 
 interface UseIVSFormResult {
@@ -7,6 +7,7 @@ interface UseIVSFormResult {
   error: string;
   isStage: boolean;
   stageToken: string;
+  chatRoomArn: string;
   setStreamArn: (value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
 }
@@ -17,6 +18,21 @@ export const useIVSForm = (): UseIVSFormResult => {
   const [error, setError] = useState("");
   const [isStage, setIsStage] = useState(false);
   const [stageToken, setStageToken] = useState("");
+  const [chatRoomArn, setChatRoomArn] = useState("");
+
+  // 環境変数からデフォルト値を読み込み
+  useEffect(() => {
+    const defaultStageArn = process.env.NEXT_PUBLIC_IVS_STAGE_ARN || "";
+    const defaultChatRoomArn = process.env.NEXT_PUBLIC_IVS_CHAT_ROOM_ARN || "";
+    
+    // デフォルトのステージARNを設定
+    if (defaultStageArn) {
+      setStreamArn(defaultStageArn);
+    }
+    
+    // チャットルームARNを設定
+    setChatRoomArn(defaultChatRoomArn);
+  }, []);
 
   const validateStageInput = (input: string): string | null => {
     if (isStageArn(input) && !process.env.NEXT_PUBLIC_IVS_PARTICIPANT_TOKEN) {
@@ -30,7 +46,7 @@ export const useIVSForm = (): UseIVSFormResult => {
     setError("");
 
     if (!streamArn) {
-      setError("Please enter a stream ARN or URL.");
+      setError("Please enter a stage ARN or URL.");
       return;
     }
 
@@ -62,6 +78,7 @@ export const useIVSForm = (): UseIVSFormResult => {
     error,
     isStage,
     stageToken,
+    chatRoomArn,
     setStreamArn,
     handleSubmit,
   };
