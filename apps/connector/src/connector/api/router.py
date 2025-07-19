@@ -1,8 +1,6 @@
 import time
 from random import randint
-from turtle import mode
 
-import requests
 from connector.common.ai_models import ai_models
 from connector.common.setting import settings
 from connector.functions.ai_access import ai_access
