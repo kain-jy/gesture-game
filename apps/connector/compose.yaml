@@ -11,6 +11,8 @@ services:
       - redis
     networks:
       - default
+    env_file:
+      - .env
   redis:
     image: redis:latest
     container_name: redis
