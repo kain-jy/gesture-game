@@ -1,10 +1,4 @@
 import { useEffect, useRef } from "react";
-import {
-  create,
-  isPlayerSupported,
-  PlayerState,
-  PlayerEventType,
-} from "amazon-ivs-player";
 
 interface UseIVSPlayerParams {
   streamUrl: string;
@@ -12,25 +6,30 @@ interface UseIVSPlayerParams {
   onPlaying?: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useIVSPlayer = ({ 
   streamUrl, 
   onError, 
   onPlaying 
 }: UseIVSPlayerParams) => {
   const playerRef = useRef<HTMLVideoElement>(null);
-  const ivsPlayerRef = useRef<ReturnType<typeof create> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ivsPlayerRef = useRef<any | null>(null);
 
   useEffect(() => {
-    if (!streamUrl || !playerRef.current) return;
-
-    if (!isPlayerSupported) {
-      console.error("IVS Player is not supported in this browser");
-      onError?.("IVS Player is not supported in this browser");
-      return;
-    }
+    if (!streamUrl || !playerRef.current || typeof window === 'undefined') return;
 
     const setupPlayer = async () => {
       try {
+        // 動的インポートでamazon-ivs-playerを読み込み
+        const { create, isPlayerSupported, PlayerState, PlayerEventType } = await import("amazon-ivs-player");
+
+        if (!isPlayerSupported) {
+          console.error("IVS Player is not supported in this browser");
+          onError?.("IVS Player is not supported in this browser");
+          return;
+        }
+
         if (ivsPlayerRef.current) {
           ivsPlayerRef.current.delete();
         }
@@ -42,7 +41,8 @@ export const useIVSPlayer = ({
 
         player.attachHTMLVideoElement(playerRef.current!);
 
-        player.addEventListener(PlayerEventType.ERROR, (error) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        player.addEventListener(PlayerEventType.ERROR, (error: any) => {
           console.error("Player error:", error);
           onError?.(error);
         });
