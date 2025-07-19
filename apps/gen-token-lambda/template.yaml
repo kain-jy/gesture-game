@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: IVS Chat Token Generation Lambda Function
+
+Parameters:
+  CorsOrigin:
+    Type: String
+    Default: '*'
+    Description: CORS allowed origin
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: nodejs18.x
+    Environment:
+      Variables:
+        CORS_ORIGIN: !Ref CorsOrigin
+
+Resources:
+  ChatTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: index.handler
+      Description: Generates IVS Chat tokens for authenticated users
+      Events:
+        CreateToken:
+          Type: Api
+          Properties:
+            Path: /token
+            Method: POST
+        OptionsMethod:
+          Type: Api
+          Properties:
+            Path: /token
+            Method: OPTIONS
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ivschat:CreateChatToken
+              Resource: '*'
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL for token generation
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/token'
+  FunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt ChatTokenFunction.Arn

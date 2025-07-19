@@ -1,0 +1,22 @@
+{
+  "name": "gen-token-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda function for generating IVS Chat tokens",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "package": "npm run build && cp -r node_modules dist/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["aws", "lambda", "ivs", "chat"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-ivschat": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.109",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
