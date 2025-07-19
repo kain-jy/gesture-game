@@ -14,9 +14,11 @@
     "amazon-ivs-chat-messaging": "^1.1.1",
     "amazon-ivs-player": "^1.42.0",
     "amazon-ivs-web-broadcast": "^1.26.0",
+    "jotai": "^2.12.5",
     "next": "15.4.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
