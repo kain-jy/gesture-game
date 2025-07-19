@@ -11,6 +11,7 @@ import {
 
 interface IVSChatRoomProps {
   chatRoomArn: string;
+  apiEndpoint?: string;
 }
 
 interface Message {
@@ -23,13 +24,16 @@ interface Message {
   sendTime: Date;
 }
 
-export default function IVSChatRoom({ chatRoomArn }: IVSChatRoomProps) {
+export default function IVSChatRoom({ chatRoomArn, apiEndpoint }: IVSChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
   const [error, setError] = useState<string>("");
   const [chatToken, setChatToken] = useState("");
+  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
+  const [isLoadingToken, setIsLoadingToken] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRoom = useRef<ChatRoom | null>(null);
 
@@ -41,24 +45,60 @@ export default function IVSChatRoom({ chatRoomArn }: IVSChatRoomProps) {
     scrollToBottom();
   }, [messages]);
 
-  const tokenProvider = async () => {
-    if (!chatToken) {
-      throw new Error("チャットトークンが設定されていません");
+  const fetchToken = async () => {
+    if (!apiEndpoint) {
+      throw new Error("API endpoint is not configured");
     }
+
+    const response = await fetch(apiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chatRoomArn,
+        userId: userId || `user-${Date.now()}`,
+        username: username || userId || `User${Date.now()}`,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to fetch token");
+    }
+
+    const data = await response.json();
     return {
-      token: chatToken,
-      sessionExpirationTime: new Date(Date.now() + 60 * 60 * 1000), // 1時間後
-      tokenExpirationTime: new Date(Date.now() + 60 * 60 * 1000),
+      token: data.token,
+      sessionExpirationTime: new Date(data.sessionExpirationTime),
+      tokenExpirationTime: new Date(data.tokenExpirationTime),
     };
   };
 
+  const tokenProvider = async () => {
+    if (chatToken) {
+      return {
+        token: chatToken,
+        sessionExpirationTime: new Date(Date.now() + 60 * 60 * 1000),
+        tokenExpirationTime: new Date(Date.now() + 60 * 60 * 1000),
+      };
+    }
+    return fetchToken();
+  };
+
   const connectToChat = async () => {
-    if (!chatToken.trim()) {
-      setError("チャットトークンを入力してください");
+    if (!apiEndpoint && !chatToken.trim()) {
+      setError("チャットトークンを入力するか、APIエンドポイントを設定してください");
+      return;
+    }
+
+    if (!userId.trim()) {
+      setError("ユーザーIDを入力してください");
       return;
     }
 
     try {
+      setIsLoadingToken(true);
       setError("");
 
       const region = chatRoomArn.split(":")[3];
@@ -103,6 +143,8 @@ export default function IVSChatRoom({ chatRoomArn }: IVSChatRoomProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "接続エラーが発生しました");
       setConnectionState("disconnected");
+    } finally {
+      setIsLoadingToken(false);
     }
   };
 
@@ -147,26 +189,60 @@ export default function IVSChatRoom({ chatRoomArn }: IVSChatRoomProps) {
           <div className="space-y-3">
             <div>
               <label
-                htmlFor="chatToken"
+                htmlFor="userId"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                チャットトークン
+                ユーザーID *
               </label>
               <input
                 type="text"
-                id="chatToken"
-                value={chatToken}
-                onChange={(e) => setChatToken(e.target.value)}
-                placeholder="チャットトークンを入力"
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder="例: user123"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <div>
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                表示名（オプション）
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="例: 田中太郎"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {!apiEndpoint && (
+              <div>
+                <label
+                  htmlFor="chatToken"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  チャットトークン（手動入力）
+                </label>
+                <input
+                  type="text"
+                  id="chatToken"
+                  value={chatToken}
+                  onChange={(e) => setChatToken(e.target.value)}
+                  placeholder="チャットトークンを入力"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
             <button
               onClick={connectToChat}
-              disabled={!chatToken.trim()}
+              disabled={!userId.trim() || isLoadingToken}
               className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              チャットに接続
+              {isLoadingToken ? "接続中..." : "チャットに接続"}
             </button>
           </div>
         </div>

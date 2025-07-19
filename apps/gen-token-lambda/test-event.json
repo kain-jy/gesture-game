@@ -1,0 +1,8 @@
+{
+  "httpMethod": "POST",
+  "path": "/token",
+  "body": "{\"chatRoomArn\":\"arn:aws:ivschat:us-west-2:123456789012:room/test-room\",\"userId\":\"test-user-123\",\"username\":\"Test User\",\"capabilities\":[\"SEND_MESSAGE\"]}",
+  "headers": {
+    "Content-Type": "application/json"
+  }
+}

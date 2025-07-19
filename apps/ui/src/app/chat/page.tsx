@@ -67,7 +67,10 @@ export default function ChatPage() {
                 退室
               </button>
             </div>
-            <IVSChatRoom chatRoomArn={chatRoomArn} />
+            <IVSChatRoom 
+              chatRoomArn={chatRoomArn} 
+              apiEndpoint={process.env.NEXT_PUBLIC_CHAT_TOKEN_API_ENDPOINT}
+            />
           </div>
         )}
       </div>
