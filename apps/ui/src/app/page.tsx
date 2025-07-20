@@ -2,8 +2,15 @@
 
 import IVSChatRoom from "@/components/IVSChatRoom";
 import IVSFormIVSStagePlayer from "@/components/IVSFormIVSStagePlayer";
+import AdminPanel from "@/components/AdminPanel";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { ADMIN_ID } from "@/constants/constant";
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const isAdmin = searchParams.get("admin") === ADMIN_ID;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-m1-midnight)] via-[var(--color-m1-deep-purple-dark)] to-[var(--color-m1-royal-blue-dark)] py-8 px-6">
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
@@ -69,5 +76,13 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

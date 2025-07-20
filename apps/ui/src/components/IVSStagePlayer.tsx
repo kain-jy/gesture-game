@@ -4,6 +4,8 @@ import { useIVSStage } from "@/hooks/useIVSStage";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import LoadingMessage from "@/components/ui/LoadingMessage";
 import DanmakuOverlay from "@/components/DanmakuOverlay";
+import CaptionOverlay from "@/components/CaptionOverlay";
+import ThemeChangeOverlay from "@/components/ThemeChangeOverlay";
 import { useAtom } from "jotai";
 import { messagesAtom } from "@/atoms/chatAtoms";
 import Logo from "./Logo";
@@ -124,6 +126,8 @@ export default function IVSStagePlayer({
           )}
         </div>
         <DanmakuOverlay messages={messages} />
+        <CaptionOverlay messages={messages} />
+        <ThemeChangeOverlay messages={messages} />
       </div>
     </div>
   );
