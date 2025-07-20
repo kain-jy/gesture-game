@@ -1,5 +1,6 @@
 import base64
 import io
+import tempfile
 
 import boto3
 
@@ -23,10 +24,16 @@ def get_latest_image() -> str:
 
     if key:
         buf = io.BytesIO()
-        s3.download_fileobj(Bucket=settings.S3_BUCKET, Key=key, Fileobj=buf)
-        buf.seek(0)
-        b64str = base64.b64encode(buf.read()).decode("utf-8")
+        file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        print(file.name)
+        with open(file.name, "wb") as f:
+            s3.download_fileobj(Bucket=settings.S3_BUCKET, Key=key, Fileobj=f)
+        with open(file.name, "rb") as f:
+            b64str = base64.b64encode(f.read()).decode("utf-8")
 
-        return f"data:image/jpeg;base64,{b64str}"
+        # buf.seek(0)
+        # b64str = base64.b64encode(buf.read()).decode("utf-8")
+
+        return f"{b64str}"
 
     return ""

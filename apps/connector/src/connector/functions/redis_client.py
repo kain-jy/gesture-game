@@ -1,6 +1,7 @@
+from redis import Redis
+
 from connector.common.setting import settings
 from connector.model.models import ModelResponse
-from redis import Redis
 
 
 class RedisClient:
@@ -28,6 +29,18 @@ class RedisClient:
         Set the status of a session in Redis.
         """
         self.client.set(f"{session_id}_status", int(status))
+
+    def set_latest_session_id(self, session_id: str) -> None:
+        """
+        Set the latest session ID in Redis.
+        """
+        self.client.set("latest_session_id", session_id)
+
+    def get_latest_session_id(self) -> str | None:
+        """
+        Get the latest session ID from Redis.
+        """
+        return self.client.get("latest_session_id")
 
     def get_model_data(self, session_id: str) -> dict[str, ModelResponse] | None:
         """
