@@ -182,6 +182,30 @@ export default function FutureContentArea() {
                       <h3 className="text-[var(--color-m1-gold)] text-xl font-bold mb-2">
                         🏆 審査結果発表 🏆
                       </h3>
+
+                      <div className="mt-6 text-center">
+                        <div className="inline-flex items-center gap-2 bg-[var(--color-m1-midnight)]/80 px-4 py-2 rounded-full border border-[var(--color-m1-gold)]/30">
+                          <span className="text-[var(--color-m1-gold)] text-sm font-semibold">
+                            平均スコア:
+                          </span>
+                          <span className="text-[var(--color-m1-silver)] text-lg font-bold">
+                            {processJudgeComments(themeResult.data).length > 0
+                              ? Math.round(
+                                  processJudgeComments(themeResult.data).reduce(
+                                    (sum, judge) => sum + judge.score,
+                                    0
+                                  ) /
+                                    processJudgeComments(themeResult.data)
+                                      .length
+                                )
+                              : 0}
+                          </span>
+                          <span className="text-[var(--color-m1-silver-dark)] text-sm">
+                            /100
+                          </span>
+                        </div>
+                      </div>
+
                       <p className="text-[var(--color-m1-silver-dark)] text-sm">
                         各審査員からのコメントをご覧ください
                       </p>
@@ -243,28 +267,6 @@ export default function FutureContentArea() {
                         )
                       )}
                     </div>
-
-                    <div className="mt-6 text-center">
-                      <div className="inline-flex items-center gap-2 bg-[var(--color-m1-midnight)]/80 px-4 py-2 rounded-full border border-[var(--color-m1-gold)]/30">
-                        <span className="text-[var(--color-m1-gold)] text-sm font-semibold">
-                          平均スコア:
-                        </span>
-                        <span className="text-[var(--color-m1-silver)] text-lg font-bold">
-                          {processJudgeComments(themeResult.data).length > 0
-                            ? Math.round(
-                                processJudgeComments(themeResult.data).reduce(
-                                  (sum, judge) => sum + judge.score,
-                                  0
-                                ) /
-                                  processJudgeComments(themeResult.data).length
-                              )
-                            : 0}
-                        </span>
-                        <span className="text-[var(--color-m1-silver-dark)] text-sm">
-                          /100
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 )}
 
@@ -291,7 +293,7 @@ export default function FutureContentArea() {
                 <div className="w-2 h-2 bg-[var(--color-m1-crimson)] rounded-full animate-pulse"></div>
               </div>
               <p className="text-[var(--color-m1-silver-dark)] mt-4 text-lg font-light">
-                次世代のエンターテイメント体験をお楽しみに
+                お待ちください。
               </p>
             </div>
           )}
