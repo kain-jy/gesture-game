@@ -3,6 +3,7 @@ import io
 import tempfile
 
 import boto3
+from PIL import Image
 
 from connector.common.setting import settings
 
@@ -23,16 +24,17 @@ def get_latest_image() -> str:
                 lastmodified = obj["LastModified"]
 
     if key:
-        buf = io.BytesIO()
         file = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        file2 = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
         print(file.name)
         with open(file.name, "wb") as f:
             s3.download_fileobj(Bucket=settings.S3_BUCKET, Key=key, Fileobj=f)
-        with open(file.name, "rb") as f:
-            b64str = base64.b64encode(f.read()).decode("utf-8")
 
-        # buf.seek(0)
-        # b64str = base64.b64encode(buf.read()).decode("utf-8")
+        img = Image.open(file.name)
+        img.save(file2.name, format="PNG")
+
+        with open(file2.name, "rb") as f:
+            b64str = base64.b64encode(f.read()).decode("utf-8")
 
         return f"{b64str}"
 
