@@ -1,6 +1,6 @@
 import requests
+
 from connector.common.setting import settings
-from connector.model.models import ModelRequest, ModelResponse
 
 
 class AI_ACCESS:
@@ -18,20 +18,30 @@ class AI_ACCESS:
 
         self.access_token = response.get("access_token")
 
-    def call_agent(self, data: ModelRequest) -> ModelResponse:
+    def get_aceess_token(self) -> str:
         """
-        Call the agent with the given endpoint and data.
+        Get the access token.
         """
+        return self.access_token
 
-        # print(type(data.model_dump()), data.model_dump())
+    # def call_agent(self, data: ModelRequest) -> ModelResponse:
+    #     """
+    #     Call the agent with the given endpoint and data.
+    #     """
 
-        response = requests.post(
-            f"{settings.AGENT_HOST}/invocations",
-            json=data.model_dump(),
-            # headers={"Authorization": f"Bearer {self.access_token}"},
-        ).json()
+    #     response = httpx.post(
+    #         f"{settings.AGENT_HOST}/invocations",
+    #         json=data.model_dump(),
+    #         headers={
+    #             "Authorization": f"Bearer {self.access_token}",
+    #             # "Content-Type": "application/x-www-form-urlencoded",
+    #         },
+    #         timeout=None,
+    #     ).json()
 
-        return ModelResponse.model_validate(response)
+    #     print(f"{response=}")
+
+    #     return ModelResponse.model_validate(response)
 
 
 ai_access = AI_ACCESS()

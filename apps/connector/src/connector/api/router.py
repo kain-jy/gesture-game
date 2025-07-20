@@ -1,9 +1,12 @@
+import asyncio
 import time
 from random import randint
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks
 
 from connector.common.ai_models import ai_models
+from connector.common.setting import settings
 from connector.functions.ai_access import ai_access
 from connector.functions.aws_s3 import get_latest_image
 from connector.functions.redis_client import redis_client
@@ -17,17 +20,36 @@ from connector.model.models import (
 router = APIRouter()
 
 
-def generate_answer(item: SessionRequest) -> None:
-    result = {}
+async def generate_answer(item: SessionRequest) -> None:
+    resp = {}
+    token = ai_access.get_aceess_token()
+    image = get_latest_image()
 
-    for k, v in ai_models.items():
-        model_request = ModelRequest(
-            model=v, theme=item.theme, image=get_latest_image()
-        )
+    async with httpx.AsyncClient() as client:
+        tasks = {}
+        for k, v in ai_models.items():
+            tasks[k] = client.post(
+                f"{settings.AGENT_HOST}/invocations",
+                json={
+                    "theme": item.theme,
+                    "image": f"{image}",
+                    # "image": f"data:image/jpg;base64,{image}",
+                    "model": v,
+                },
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=None,
+            )
 
-        result[k] = ai_access.call_agent(model_request)
+        results = await asyncio.gather(*tasks.values())
 
-    redis_client.set_model_data(item.session_id, result)
+        for model, response in zip(tasks.keys(), results):
+            if response.status_code != 200:
+                print(f"Error calling model {model}: {response.text}")
+                continue
+            print(model, response.json())
+            resp[model] = ModelResponse.model_validate(response.json())
+
+    redis_client.set_model_data(item.session_id, resp)
     redis_client.set_session_status(item.session_id, True)
 
 
@@ -41,6 +63,7 @@ def get_score(
     if status is None:
         background_tasks.add_task(generate_answer, item)
         redis_client.set_session_status(item.session_id, False)
+        redis_client.set_latest_session_id(item.session_id)
         return SessionResponse(status=False, message="initialize", data=None)
     elif not status:
         return SessionResponse(status=False, message="waiting", data=None)
@@ -50,6 +73,33 @@ def get_score(
             status=True,
             message="success",
             data=redis_client.get_model_data(item.session_id),
+        )
+
+
+@router.get("/result")
+def get_result() -> SessionResponse:
+    # item.session_id
+    current_session = redis_client.get_latest_session_id()
+
+    if current_session is None:
+        return SessionResponse(
+            status=False,
+            message="no session found",
+            data=None,
+        )
+    else:
+        result = redis_client.get_model_data(current_session)
+
+        if not result:
+            return SessionResponse(
+                status=False,
+                message="no result found",
+                data=None,
+            )
+        return SessionResponse(
+            status=True,
+            message="success",
+            data=result,
         )
 
 
