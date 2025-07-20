@@ -30,6 +30,8 @@ def health_check() -> dict[str, str]:
 
 
 async def generate_answer(item: SessionRequest) -> None:
+    await asyncio.sleep(3)
+
     resp = {}
     token = ai_access.get_aceess_token()
     image = get_latest_image()
