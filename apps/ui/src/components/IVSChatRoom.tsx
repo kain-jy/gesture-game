@@ -237,7 +237,10 @@ export default function IVSChatRoom() {
 
           <div className="flex-1 overflow-y-auto h-full p-4 space-y-3 scrollbar-thin scrollbar-thumb-[var(--color-m1-gold)]/30 scrollbar-track-transparent">
             {messages.map((message) => (
-              <div key={message.id} className="bg-gradient-to-r from-[var(--color-m1-charcoal)]/80 to-[var(--color-m1-midnight-light)]/80 rounded-lg p-4 border border-[var(--color-m1-gold)]/10 backdrop-blur-sm">
+              <div
+                key={message.id}
+                className="bg-gradient-to-r from-[var(--color-m1-charcoal)]/80 to-[var(--color-m1-midnight-light)]/80 rounded-lg p-4 border border-[var(--color-m1-gold)]/10 backdrop-blur-sm"
+              >
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-semibold text-sm text-[var(--color-m1-gold)] tracking-wide">
                     {message.sender.attributes?.username ||
@@ -247,7 +250,9 @@ export default function IVSChatRoom() {
                     {message.sendTime.toLocaleTimeString()}
                   </span>
                 </div>
-                <p className="text-[var(--color-m1-silver)] leading-relaxed">{message.content}</p>
+                <p className="text-[var(--color-m1-silver)] leading-relaxed">
+                  {message.content}
+                </p>
               </div>
             ))}
             <div ref={messagesEndRef} />
@@ -280,7 +285,9 @@ export default function IVSChatRoom() {
 
       {error && (
         <div className="p-4 bg-gradient-to-r from-[var(--color-m1-crimson-dark)]/20 to-[var(--color-m1-crimson)]/20 border-t border-[var(--color-m1-crimson)]/30">
-          <p className="text-[var(--color-m1-crimson-light)] text-sm font-medium">{error}</p>
+          <p className="text-[var(--color-m1-crimson-light)] text-sm font-medium">
+            {error}
+          </p>
         </div>
       )}
     </div>
