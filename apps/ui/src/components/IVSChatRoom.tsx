@@ -289,7 +289,7 @@ export default function IVSChatRoom() {
                             </svg>
                           </div>
                           <span className="font-bold text-sm bg-gradient-to-r from-[var(--color-m1-gold)] to-[var(--color-m1-champagne)] bg-clip-text text-transparent tracking-wide uppercase">
-                            "管理者メッセージ"
+                            管理者メッセージ
                           </span>
                         </div>
                         <span className="text-xs text-[var(--color-m1-gold)]">

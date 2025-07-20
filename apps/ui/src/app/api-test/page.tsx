@@ -1,24 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { apiClient, SessionRequest, ModelRequest, SessionResponse, ModelResponse } from "@/services/api";
+import {
+  apiClient,
+  SessionRequest,
+  ModelRequest,
+  SessionResponse,
+  ModelResponse,
+} from "@/services/api";
+import Link from "next/link";
 
 export default function ApiTestPage() {
   const [sessionLoading, setSessionLoading] = useState(false);
   const [invocationLoading, setInvocationLoading] = useState(false);
-  const [sessionResult, setSessionResult] = useState<SessionResponse | null>(null);
-  const [invocationResult, setInvocationResult] = useState<ModelResponse | null>(null);
+  const [sessionResult, setSessionResult] = useState<SessionResponse | null>(
+    null
+  );
+  const [invocationResult, setInvocationResult] =
+    useState<ModelResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [sessionForm, setSessionForm] = useState<SessionRequest>({
     session_id: "",
-    theme: "C"
+    theme: "C",
   });
 
   const [invocationForm, setInvocationForm] = useState<ModelRequest>({
     model: "amazon.nova-pro-v1:0",
     theme: "C",
-    image: ""
+    image: "",
   });
 
   const handleSessionTest = async () => {
@@ -49,8 +59,9 @@ export default function ApiTestPage() {
 
   const generateSampleBase64Image = () => {
     // 簡単な1x1ピクセルのPNG画像のBase64データ
-    const sampleImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
-    setInvocationForm(prev => ({ ...prev, image: sampleImage }));
+    const sampleImage =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+    setInvocationForm((prev) => ({ ...prev, image: sampleImage }));
   };
 
   return (
@@ -69,26 +80,42 @@ export default function ApiTestPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Session API Test */}
           <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-xl font-semibold text-white mb-4">Session API テスト</h2>
-            
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Session API テスト
+            </h2>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-300 text-sm mb-2">Session ID</label>
+                <label className="block text-gray-300 text-sm mb-2">
+                  Session ID
+                </label>
                 <input
                   type="text"
                   value={sessionForm.session_id}
-                  onChange={(e) => setSessionForm(prev => ({ ...prev, session_id: e.target.value }))}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      session_id: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                   placeholder="session_123"
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-300 text-sm mb-2">Theme</label>
+                <label className="block text-gray-300 text-sm mb-2">
+                  Theme
+                </label>
                 <input
                   type="text"
                   value={sessionForm.theme}
-                  onChange={(e) => setSessionForm(prev => ({ ...prev, theme: e.target.value }))}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      theme: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                   placeholder="C"
                   maxLength={1}
@@ -106,7 +133,9 @@ export default function ApiTestPage() {
 
             {sessionResult && (
               <div className="mt-4 p-4 bg-gray-900/50 rounded border border-gray-600">
-                <h3 className="text-sm font-semibold text-gray-300 mb-2">Response:</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">
+                  Response:
+                </h3>
                 <pre className="text-xs text-gray-400 overflow-auto">
                   {JSON.stringify(sessionResult, null, 2)}
                 </pre>
@@ -116,25 +145,41 @@ export default function ApiTestPage() {
 
           {/* Invocation API Test */}
           <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-            <h2 className="text-xl font-semibold text-white mb-4">Invocation API テスト</h2>
-            
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Invocation API テスト
+            </h2>
+
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-300 text-sm mb-2">Model</label>
+                <label className="block text-gray-300 text-sm mb-2">
+                  Model
+                </label>
                 <input
                   type="text"
                   value={invocationForm.model}
-                  onChange={(e) => setInvocationForm(prev => ({ ...prev, model: e.target.value }))}
+                  onChange={(e) =>
+                    setInvocationForm((prev) => ({
+                      ...prev,
+                      model: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-300 text-sm mb-2">Theme</label>
+                <label className="block text-gray-300 text-sm mb-2">
+                  Theme
+                </label>
                 <input
                   type="text"
                   value={invocationForm.theme}
-                  onChange={(e) => setInvocationForm(prev => ({ ...prev, theme: e.target.value }))}
+                  onChange={(e) =>
+                    setInvocationForm((prev) => ({
+                      ...prev,
+                      theme: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                   maxLength={1}
                 />
@@ -153,7 +198,12 @@ export default function ApiTestPage() {
                 </label>
                 <textarea
                   value={invocationForm.image}
-                  onChange={(e) => setInvocationForm(prev => ({ ...prev, image: e.target.value }))}
+                  onChange={(e) =>
+                    setInvocationForm((prev) => ({
+                      ...prev,
+                      image: e.target.value,
+                    }))
+                  }
                   className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 focus:outline-none h-20 resize-none"
                   placeholder="Base64 encoded image data..."
                 />
@@ -170,7 +220,9 @@ export default function ApiTestPage() {
 
             {invocationResult && (
               <div className="mt-4 p-4 bg-gray-900/50 rounded border border-gray-600">
-                <h3 className="text-sm font-semibold text-gray-300 mb-2">Response:</h3>
+                <h3 className="text-sm font-semibold text-gray-300 mb-2">
+                  Response:
+                </h3>
                 <pre className="text-xs text-gray-400 overflow-auto">
                   {JSON.stringify(invocationResult, null, 2)}
                 </pre>
@@ -180,12 +232,12 @@ export default function ApiTestPage() {
         </div>
 
         <div className="mt-8 text-center">
-          <a
+          <Link
             href="/"
             className="inline-block bg-gray-600 hover:bg-gray-700 text-white py-2 px-6 rounded transition-colors"
           >
             ホームに戻る
-          </a>
+          </Link>
         </div>
       </div>
     </div>
