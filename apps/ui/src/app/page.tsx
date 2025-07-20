@@ -2,6 +2,7 @@
 
 import IVSChatRoom from "@/components/IVSChatRoom";
 import IVSFormIVSStagePlayer from "@/components/IVSFormIVSStagePlayer";
+import FutureContentArea from "@/components/FutureContentArea";
 import { Suspense } from "react";
 
 function HomeContent() {
@@ -48,27 +49,7 @@ function HomeContent() {
         </div>
 
         {/* 未来のコンテンツエリア */}
-        <div className="w-full">
-          <div className="bg-gradient-to-r from-[var(--color-m1-deep-purple-dark)] via-[var(--color-m1-charcoal)] to-[var(--color-m1-deep-purple-dark)] rounded-2xl p-8 shadow-2xl border border-[var(--color-m1-crimson)]/20 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-m1-crimson)]/10 via-transparent to-[var(--color-m1-gold)]/10"></div>
-            <div className="relative text-center">
-              <div className="inline-flex items-center gap-3 bg-[var(--color-m1-midnight)]/80 px-6 py-3 rounded-full border border-[var(--color-m1-gold)]/30">
-                <div className="w-2 h-2 bg-[var(--color-m1-gold)] rounded-full animate-pulse"></div>
-                <span className="text-[var(--color-m1-silver)] font-medium tracking-wider">
-                  COMING SOON
-                </span>
-                <div className="w-2 h-2 bg-[var(--color-m1-crimson)] rounded-full animate-pulse"></div>
-              </div>
-              <p className="text-[var(--color-m1-silver-dark)] mt-4 text-lg font-light">
-                次世代のエンターテイメント体験をお楽しみに
-              </p>
-            </div>
-            {/* 装飾的な要素 */}
-            <div className="absolute top-4 left-4 w-16 h-16 border-2 border-[var(--color-m1-gold)]/20 rounded-full"></div>
-            <div className="absolute bottom-4 right-4 w-12 h-12 border-2 border-[var(--color-m1-crimson)]/20 rounded-full"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-[var(--color-m1-royal-blue)]/10 rounded-full"></div>
-          </div>
-        </div>
+        <FutureContentArea />
       </div>
     </div>
   );

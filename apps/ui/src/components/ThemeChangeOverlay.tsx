@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useAtom } from "jotai";
 import { Message } from "@/atoms/chatAtoms";
-import { ADMIN_MESSAGE } from "@/constants/constant";
+import { ADMIN_MESSAGE, ADMIN_ID } from "@/constants/constant";
+import { apiClient } from "@/services/api";
+import { currentThemeAtom } from "@/atoms/themeAtoms";
 
 interface ThemeChangeOverlayProps {
   messages: Message[];
@@ -25,6 +28,7 @@ export default function ThemeChangeOverlay({
   const [currentTheme, setCurrentTheme] = useState<ThemeChange | null>(null);
   const [displayState, setDisplayState] = useState<DisplayState>("none");
   const [countdown, setCountdown] = useState<number>(3);
+  const [, setGlobalTheme] = useAtom(currentThemeAtom);
   const lastProcessedIndexRef = useRef<number>(-1);
   const processedThemeIdsRef = useRef<Set<string>>(new Set());
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,6 +46,9 @@ export default function ThemeChangeOverlay({
 
       if (themeMessage && !processedThemeIdsRef.current.has(themeMessage.id)) {
         processedThemeIdsRef.current.add(themeMessage.id);
+
+        // AdminUserかどうかを確認
+        const isAdminUser = themeMessage.sender.userId === ADMIN_ID;
 
         // 前のタイマーをクリア
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -63,13 +70,22 @@ export default function ThemeChangeOverlay({
         setDisplayState("theme");
         setCountdown(3); // カウントダウンをリセット
 
+        const sessionId = `${newTheme.theme}_session_id`;
+
+        // 全ユーザーで共有するテーマ情報を設定
+        setGlobalTheme({
+          theme: newTheme.theme,
+          sessionId: sessionId,
+          timestamp: newTheme.timestamp,
+        });
+
         // 2秒後にカウントダウン開始
         timeoutRef.current = setTimeout(() => {
           setDisplayState("countdown");
 
           // カウントダウン処理
           let count = 3;
-          intervalRef.current = setInterval(() => {
+          intervalRef.current = setInterval(async () => {
             count--;
             setCountdown(count);
 
@@ -77,16 +93,25 @@ export default function ThemeChangeOverlay({
               // カウントダウン終了
               if (intervalRef.current) clearInterval(intervalRef.current);
 
-              // APIリクエスト（現時点ではconsole.log）
-              console.log("テーマ変更リクエスト:", {
-                messageId: newTheme.id,
-                theme: newTheme.theme,
-                timestamp: newTheme.timestamp,
-              });
+              // AdminUserのみResult APIを呼び出し
+              if (isAdminUser) {
+                try {
+                  console.log("テーマ変更Result API呼び出し:", sessionId);
+                  const result = await apiClient.getResult(sessionId);
+                  console.log("Result API結果:", result);
+                } catch (error) {
+                  console.error("Result API エラー:", error);
+                }
+              } else {
+                console.log(
+                  "非AdminユーザーのためResult API呼び出しをスキップ"
+                );
+              }
 
               // 表示を消す
               setDisplayState("none");
               setCurrentTheme(null);
+              // グローバルテーマは残しておく（ポーリング継続のため）
             }
           }, COUNTDOWN_INTERVAL);
         }, THEME_DISPLAY_DURATION);

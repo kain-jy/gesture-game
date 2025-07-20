@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Message } from "@/atoms/chatAtoms";
-import { ADMIN_MESSAGE } from "@/constants/constant";
+import { ADMIN_ID, ADMIN_MESSAGE } from "@/constants/constant";
 
 interface BulletMessage extends Message {
   id: string;
@@ -102,9 +102,13 @@ export default function DanmakuOverlay({ messages }: DanmakuOverlayProps) {
       console.log("Latest message:", latestMessage);
       if (latestMessage.id !== lastMessageIdRef.current) {
         // prefix付きメッセージは弾幕に表示しない
+
+        const isAdminUser = latestMessage.sender.userId === ADMIN_ID;
         const hasAdminPrefix =
-          latestMessage.content.startsWith(ADMIN_MESSAGE.THEME_ID) ||
-          latestMessage.content.startsWith(ADMIN_MESSAGE.CAPTION_ID);
+          (isAdminUser &&
+            latestMessage.content.startsWith(ADMIN_MESSAGE.THEME_ID)) ||
+          (isAdminUser &&
+            latestMessage.content.startsWith(ADMIN_MESSAGE.CAPTION_ID));
 
         if (!hasAdminPrefix) {
           console.log("Adding new bullet message:", latestMessage.content);
