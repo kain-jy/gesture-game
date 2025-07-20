@@ -28,6 +28,7 @@ export interface SessionResponse {
   status: boolean;
   message: Message;
   data: Record<string, ModelResponse> | null;
+  image_url: string;
 }
 
 // API client functions
@@ -41,7 +42,7 @@ export class ApiClient {
   }
 
   async createSession(request: SessionRequest): Promise<SessionResponse> {
-    const response = await fetch(`${this.baseUrl}/session`, {
+    const response = await fetch(`${this.baseUrl}session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,12 +59,32 @@ export class ApiClient {
 
 
   async createInvocation(request: ModelRequest): Promise<ModelResponse> {
-    const response = await fetch(`${this.baseUrl}/invocations`, {
+    const response = await fetch(`${this.baseUrl}invocations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async getResult(sessionId?: string): Promise<SessionResponse> {
+    const url = new URL(`${this.baseUrl}result`);
+    if (sessionId) {
+      url.searchParams.append('session_id', sessionId);
+    }
+    
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     if (!response.ok) {
