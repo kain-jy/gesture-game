@@ -6,7 +6,6 @@ interface UseIVSStageParams {
   onConnectionStateChange?: (state: unknown) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useIVSStage = ({
   participantToken,
   onError,
@@ -22,7 +21,6 @@ export const useIVSStage = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const streamTypeRef = useRef<any>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createVideoElement = (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     participant: any,
@@ -38,7 +36,6 @@ export const useIVSStage = ({
     return videoElement;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleStreamsAdded = useCallback((
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     participant: any,
