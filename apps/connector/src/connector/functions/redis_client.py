@@ -11,6 +11,7 @@ class RedisClient:
             port=settings.REDIS_PORT,
             db=settings.REDIS_DB,
             decode_responses=True,
+            ssl=True,
         )
 
     def get_session_status(self, session_id: str) -> bool | None:

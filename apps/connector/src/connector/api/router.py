@@ -21,6 +21,14 @@ from connector.model.models import (
 router = APIRouter()
 
 
+@router.get("/health")
+def health_check() -> dict[str, str]:
+    """
+    Health check endpoint.
+    """
+    return {"status": "ok"}
+
+
 async def generate_answer(item: SessionRequest) -> None:
     resp = {}
     token = ai_access.get_aceess_token()
