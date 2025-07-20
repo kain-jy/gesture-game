@@ -22,5 +22,5 @@ RUN --mount=type=bind,source=./pyproject.toml,target=/app/pyproject.toml \
     --mount=type=bind,source=./README.md,target=/app/README.md \
     pip install --no-cache-dir /app
 
-CMD ["fastapi", "run", "/app/src/main.py"]
+CMD ["fastapi", "run", "/app/src/connector/main.py"]
 EXPOSE 8000
