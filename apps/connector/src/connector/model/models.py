@@ -27,3 +27,4 @@ class SessionResponse(BaseModel):
     status: bool
     message: str
     data: dict[str, ModelResponse] | None
+    image_url: str

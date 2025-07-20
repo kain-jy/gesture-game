@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import time
 from random import randint
 
@@ -8,7 +9,7 @@ from fastapi import APIRouter, BackgroundTasks
 from connector.common.ai_models import ai_models
 from connector.common.setting import settings
 from connector.functions.ai_access import ai_access
-from connector.functions.aws_s3 import get_latest_image
+from connector.functions.aws_s3 import get_latest_image, upload_image
 from connector.functions.redis_client import redis_client
 from connector.model.models import (
     ModelRequest,
@@ -25,6 +26,14 @@ async def generate_answer(item: SessionRequest) -> None:
     token = ai_access.get_aceess_token()
     image = get_latest_image()
 
+    if image is None:
+        print("No image found in S3")
+        redis_client.set_session_status(item.session_id, True)
+        return
+
+    upload_image(item.session_id, image)
+    encoded_image = base64.b64encode(image).decode("utf-8")
+
     async with httpx.AsyncClient() as client:
         tasks = {}
         for k, v in ai_models.items():
@@ -32,8 +41,7 @@ async def generate_answer(item: SessionRequest) -> None:
                 f"{settings.AGENT_HOST}/invocations",
                 json={
                     "theme": item.theme,
-                    "image": f"{image}",
-                    # "image": f"data:image/jpg;base64,{image}",
+                    "image": f"{encoded_image}",
                     "model": v,
                 },
                 headers={"Authorization": f"Bearer {token}"},
@@ -64,15 +72,26 @@ def get_score(
         background_tasks.add_task(generate_answer, item)
         redis_client.set_session_status(item.session_id, False)
         redis_client.set_latest_session_id(item.session_id)
-        return SessionResponse(status=False, message="initialize", data=None)
+        return SessionResponse(
+            status=False,
+            message="initialize",
+            data=None,
+            image_url=f"https://d23qucqh8l03a5.cloudfront.net/{item.session_id}.png",
+        )
     elif not status:
-        return SessionResponse(status=False, message="waiting", data=None)
+        return SessionResponse(
+            status=False,
+            message="waiting",
+            data=None,
+            image_url=f"https://d23qucqh8l03a5.cloudfront.net/{item.session_id}.png",
+        )
     else:
         # status is True
         return SessionResponse(
             status=True,
             message="success",
             data=redis_client.get_model_data(item.session_id),
+            image_url=f"https://d23qucqh8l03a5.cloudfront.net/{item.session_id}.png",
         )
 
 
@@ -86,6 +105,7 @@ def get_result() -> SessionResponse:
             status=False,
             message="no session found",
             data=None,
+            image_url="",
         )
     else:
         result = redis_client.get_model_data(current_session)
@@ -95,11 +115,13 @@ def get_result() -> SessionResponse:
                 status=False,
                 message="no result found",
                 data=None,
+                image_url=f"https://d23qucqh8l03a5.cloudfront.net/{current_session}.png",
             )
         return SessionResponse(
             status=True,
             message="success",
             data=result,
+            image_url=f"https://d23qucqh8l03a5.cloudfront.net/{current_session}.png",
         )
 
 

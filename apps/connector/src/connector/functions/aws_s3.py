@@ -8,7 +8,7 @@ from PIL import Image
 from connector.common.setting import settings
 
 
-def get_latest_image() -> str:
+def get_latest_image() -> bytes | None:
     s3 = boto3.client("s3")
     bucket = s3.list_objects_v2(
         Bucket=settings.S3_BUCKET,
@@ -34,8 +34,19 @@ def get_latest_image() -> str:
         img.save(file2.name, format="PNG")
 
         with open(file2.name, "rb") as f:
-            b64str = base64.b64encode(f.read()).decode("utf-8")
+            return f.read()
 
-        return f"{b64str}"
+    return None
 
-    return ""
+
+def upload_image(session_id: str, image: bytes) -> None:
+    s3 = boto3.client("s3")
+    # bucket = settings.S3_BUCKET
+
+    # Upload the image to S3
+    s3.upload_fileobj(
+        Fileobj=io.BytesIO(image),
+        Bucket="guesture-game-image",
+        Key=f"{session_id}.png",
+        ExtraArgs={"ContentType": "image/png"},
+    )
